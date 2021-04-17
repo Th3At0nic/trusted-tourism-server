@@ -21,8 +21,9 @@ client.connect((err) => {
 
   app.post("/addAppointment", (req, res) => {
     const appointment = req.body;
+    console.log(appointment);
     appointmentCollection.insertOne(appointment).then((result) => {
-      res.send(result.insertedCount);
+      res.send(result.insertedCount > 0);
     });
   });
 });
