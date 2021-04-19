@@ -2,6 +2,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const fileupload = require("express-fileupload");
+const fs = require("fs-extra");
 const port = 5003;
 require("dotenv").config();
 const app = express();
@@ -20,7 +21,16 @@ client.connect((err) => {
   const appointmentCollection = client
     .db("goodnessGlamour")
     .collection("appointments");
-  console.log("Database Connected");
+  console.log("Database appointments Connected");
+
+  const beauticianCollection = client
+    .db("goodnessGlamour")
+    .collection("beauticians");
+  console.log("beauticians Connected");
+
+  const serviceCollection = client.db("goodnessGlamour").collection("services");
+  console.log("services Connected");
+  console.log("rahat connected");
 
   app.post("/addAppointment", (req, res) => {
     const appointment = req.body;
@@ -39,17 +49,89 @@ client.connect((err) => {
       });
   });
 
+  app.get("/members", (req, res) => {
+    beauticianCollection.find({}).toArray((err, documents) => {
+      res.send(documents);
+    });
+  });
+
+  app.get("/services", (req, res) => {
+    serviceCollection.find({}).toArray((err, documents) => {
+      res.send(documents);
+    });
+  });
+
   app.post("/addBeautician", (req, res) => {
     const name = req.body.name;
     const email = req.body.email;
     const file = req.files.file;
-    console.log(name, email, file);
-    file.mv(`${__dirname}/beauticians/${file.name}`, (err) => {
+    const filePath = `${__dirname}/beauticians/${file.name}`;
+    file.mv(filePath, (err) => {
       if (err) {
         console.log(err);
-        return res.status(500).send({ msg: "Failed to upload image" });
+        res.status(500).send({ msg: "Failed to upload image" });
       }
-      return res.send({ name: file.name, path: `/${file.name}` });
+      // return res.send({ name: file.name, path: `/${file.name}` });
+      const newImg = fs.readFileSync(filePath);
+      const encodedImg = newImg.toString("base64");
+
+      let image = {
+        contentType: req.files.file.mimetype,
+        size: req.files.file.size,
+        img: Buffer.from(encodedImg, "base64"),
+      };
+
+      beauticianCollection.insertOne({ name, email, image }).then((result) => {
+        fs.remove(filePath, (error) => {
+          if (error) {
+            console.log(error);
+            res.status(500).send({ msg: "Failed to upload image" });
+          }
+          res.send(result.insertedCount > 0);
+        });
+      });
+    });
+  });
+
+  app.post("/addService", (req, res) => {
+    const service = req.body.service;
+    const cost = req.body.cost;
+    const space = req.body.space;
+    const file = req.files.file;
+    const detail = req.body.detail;
+    const filePath = `${__dirname}/services/${file.name}`;
+    file.mv(filePath, (err) => {
+      if (err) {
+        console.log(err);
+        res.status(500).send({ msg: "Failed to upload image" });
+      }
+      const newImg = fs.readFileSync(filePath);
+      const encImg = newImg.toString("base64");
+
+      let image = {
+        contentType: req.files.file.mimetype,
+        size: req.files.file.size,
+        img: Buffer.from(encImg, "base64"),
+      };
+
+      serviceCollection
+        .insertOne({
+          service: service,
+          cost: cost,
+          space: space,
+          detail: detail,
+          image,
+        })
+        .then((result) => {
+          console.log(result);
+          fs.remove(filePath, (error) => {
+            if (error) {
+              console.log(error);
+              res.status(500).send({ msg: "Failed to upload image" });
+            }
+            res.send(result.insertedCount > 0);
+          });
+        });
     });
   });
 });
