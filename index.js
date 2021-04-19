@@ -8,6 +8,10 @@ require("dotenv").config();
 const app = express();
 app.use(bodyParser.json());
 app.use(cors());
+//Mongo DB code for DB connect Start
+const ObjectId = require("mongodb").ObjectId;
+const assert = require("assert");
+//Mongo DB code for DB connect ends
 app.use(express.static("beauticians"));
 app.use(fileupload());
 
@@ -31,6 +35,11 @@ client.connect((err) => {
   const serviceCollection = client.db("goodnessGlamour").collection("services");
   console.log("services Connected");
   console.log("rahat connected");
+
+  const orderCollection = client.db("goodnessGlamour").collection("orders");
+  const adminUserCollection = client
+    .db("goodnessGlamour")
+    .collection("adminUser");
 
   app.post("/addAppointment", (req, res) => {
     const appointment = req.body;
@@ -73,7 +82,7 @@ client.connect((err) => {
       }
       // return res.send({ name: file.name, path: `/${file.name}` });
       const newImg = fs.readFileSync(filePath);
-      const encodedImg = newImg.toString("base64");
+      const encodedImg = newImg.toString("base6607dc07ab71bf9e3aa1525964");
 
       let image = {
         contentType: req.files.file.mimetype,
@@ -93,10 +102,45 @@ client.connect((err) => {
     });
   });
 
+  //Showing Product By ID API
+  app.get("/showServiceById/:id", (req, res) => {
+    const id = req.params.id;
+    serviceCollection.find({ _id: ObjectId(id) }).toArray((err, documents) => {
+      //console.log(documents);
+      res.send(documents[0]);
+    });
+  });
+
+  //SHowing Order By email API
+  app.get("/showOrders/:email", (req, res) => {
+    const email = req.params.email;
+
+    adminUserCollection.find({ email: email }).toArray((err, admin) => {
+      let filter = { email: email };
+      if (admin.length !== 0) {
+        filter = "";
+      }
+      console.log(admin.length);
+      orderCollection.find(filter).toArray((err, documents) => {
+        console.log(documents);
+        res.send(documents);
+      });
+    });
+  });
+
+  //Order Submit/Checkout API
+  app.post("/addOrder", (req, res) => {
+    const order = req.body;
+    //console.log(order);
+    orderCollection.insertOne(order).then((result) => {
+      res.send(result.insertedCount > 0);
+    });
+  });
+
   app.post("/addService", (req, res) => {
-    const service = req.body.service;
-    const cost = req.body.cost;
-    const space = req.body.space;
+    const packageName = req.body.packageName;
+    const price = req.body.price;
+    const person = req.body.person;
     const file = req.files.file;
     const detail = req.body.detail;
     const filePath = `${__dirname}/services/${file.name}`;
@@ -116,9 +160,9 @@ client.connect((err) => {
 
       serviceCollection
         .insertOne({
-          service: service,
-          cost: cost,
-          space: space,
+          packageName: packageName,
+          price: price,
+          person: person,
           detail: detail,
           image,
         })
