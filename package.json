@@ -1,7 +1,6 @@
 {
   "name": "server",
   "version": "1.0.0",
-  "description": "",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
@@ -21,5 +20,14 @@
   },
   "devDependencies": {
     "nodemon": "^2.0.7"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Porgramming-Hero-web-course/complete-website-server-Th3At0nic.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Porgramming-Hero-web-course/complete-website-server-Th3At0nic/issues"
+  },
+  "homepage": "https://github.com/Porgramming-Hero-web-course/complete-website-server-Th3At0nic#readme",
+  "description": ""
 }
