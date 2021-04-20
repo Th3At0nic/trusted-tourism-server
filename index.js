@@ -12,7 +12,7 @@ app.use(cors());
 const ObjectId = require("mongodb").ObjectId;
 const assert = require("assert");
 //Mongo DB code for DB connect ends
-app.use(express.static("beauticians"));
+app.use(express.static("members"));
 app.use(fileupload());
 
 const MongoClient = require("mongodb").MongoClient;
@@ -27,10 +27,10 @@ client.connect((err) => {
     .collection("appointments");
   console.log("Database appointments Connected");
 
-  const beauticianCollection = client
-    .db("goodnessGlamour")
-    .collection("beauticians");
-  console.log("beauticians Connected");
+  const memberCollection = client.db("goodnessGlamour").collection("members");
+  console.log("members Connected");
+
+  const reviewCollection = client.db("goodnessGlamour").collection("reviews");
 
   const serviceCollection = client.db("goodnessGlamour").collection("services");
   console.log("services Connected");
@@ -59,7 +59,7 @@ client.connect((err) => {
   });
 
   app.get("/members", (req, res) => {
-    beauticianCollection.find({}).toArray((err, documents) => {
+    memberCollection.find({}).toArray((err, documents) => {
       res.send(documents);
     });
   });
@@ -70,11 +70,11 @@ client.connect((err) => {
     });
   });
 
-  app.post("/addBeautician", (req, res) => {
+  app.post("/addMember", (req, res) => {
     const name = req.body.name;
     const email = req.body.email;
     const file = req.files.file;
-    const filePath = `${__dirname}/beauticians/${file.name}`;
+    const filePath = `${__dirname}/allmember/${file.name}`;
     file.mv(filePath, (err) => {
       if (err) {
         console.log(err);
@@ -82,7 +82,7 @@ client.connect((err) => {
       }
       // return res.send({ name: file.name, path: `/${file.name}` });
       const newImg = fs.readFileSync(filePath);
-      const encodedImg = newImg.toString("base6607dc07ab71bf9e3aa1525964");
+      const encodedImg = newImg.toString("base64");
 
       let image = {
         contentType: req.files.file.mimetype,
@@ -90,7 +90,7 @@ client.connect((err) => {
         img: Buffer.from(encodedImg, "base64"),
       };
 
-      beauticianCollection.insertOne({ name, email, image }).then((result) => {
+      memberCollection.insertOne({ name, email, image }).then((result) => {
         fs.remove(filePath, (error) => {
           if (error) {
             console.log(error);
@@ -99,6 +99,21 @@ client.connect((err) => {
           res.send(result.insertedCount > 0);
         });
       });
+    });
+  });
+
+  app.post("/addReview", (req, res) => {
+    const name = req.body.name;
+    const from = req.body.from;
+    const detail = req.body.detail;
+    reviewCollection.insertOne({ name, detail, from }).then((result) => {
+      res.send(result.insertedCount > 0);
+    });
+  });
+
+  app.get("/addReview", (req, res) => {
+    reviewCollection.find({}).toArray((err, documents) => {
+      res.send(documents);
     });
   });
 
