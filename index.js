@@ -75,30 +75,18 @@ client.connect((err) => {
     const email = req.body.email;
     const file = req.files.file;
     const filePath = `${__dirname}/allmember/${file.name}`;
-    file.mv(filePath, (err) => {
-      if (err) {
-        console.log(err);
-        res.status(500).send({ msg: "Failed to upload image" });
-      }
-      // return res.send({ name: file.name, path: `/${file.name}` });
-      const newImg = fs.readFileSync(filePath);
-      const encodedImg = newImg.toString("base64");
 
-      let image = {
-        contentType: req.files.file.mimetype,
-        size: req.files.file.size,
-        img: Buffer.from(encodedImg, "base64"),
-      };
+    const newImg = req.files.file.data;
+    const encodedImg = newImg.toString("base64");
 
-      memberCollection.insertOne({ name, email, image }).then((result) => {
-        fs.remove(filePath, (error) => {
-          if (error) {
-            console.log(error);
-            res.status(500).send({ msg: "Failed to upload image" });
-          }
-          res.send(result.insertedCount > 0);
-        });
-      });
+    let image = {
+      contentType: req.files.file.mimetype,
+      size: req.files.file.size,
+      img: Buffer.from(encodedImg, "base64"),
+    };
+
+    memberCollection.insertOne({ name, email, image }).then((result) => {
+      res.send(result.insertedCount > 0);
     });
   });
 
@@ -159,39 +147,28 @@ client.connect((err) => {
     const file = req.files.file;
     const detail = req.body.detail;
     const filePath = `${__dirname}/services/${file.name}`;
-    file.mv(filePath, (err) => {
-      if (err) {
-        console.log(err);
-        res.status(500).send({ msg: "Failed to upload image" });
-      }
-      const newImg = fs.readFileSync(filePath);
-      const encImg = newImg.toString("base64");
 
-      let image = {
-        contentType: req.files.file.mimetype,
-        size: req.files.file.size,
-        img: Buffer.from(encImg, "base64"),
-      };
+    const newImg = file.data;
+    const encImg = newImg.toString("base64");
 
-      serviceCollection
-        .insertOne({
-          packageName: packageName,
-          price: price,
-          person: person,
-          detail: detail,
-          image,
-        })
-        .then((result) => {
-          console.log(result);
-          fs.remove(filePath, (error) => {
-            if (error) {
-              console.log(error);
-              res.status(500).send({ msg: "Failed to upload image" });
-            }
-            res.send(result.insertedCount > 0);
-          });
-        });
-    });
+    let image = {
+      contentType: req.files.file.mimetype,
+      size: req.files.file.size,
+      img: Buffer.from(encImg, "base64"),
+    };
+
+    serviceCollection
+      .insertOne({
+        packageName: packageName,
+        price: price,
+        person: person,
+        detail: detail,
+        image,
+      })
+      .then((result) => {
+        console.log(result);
+        res.send(result.insertedCount > 0);
+      });
   });
 });
 
