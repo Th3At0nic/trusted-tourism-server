@@ -4,4 +4,4 @@ This is the project of a Tourism based website that they offer you couple of pac
 
 Many features and supports will be added soon..Visit my site below:
 
-# LIVE SITE: https://gifted-banach-d12246.netlify.app/
+# LIVE SITE: https://trustedtourism.netlify.app
